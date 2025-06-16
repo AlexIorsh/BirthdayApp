@@ -14,7 +14,7 @@ BirthdayApp — это серверное веб-приложение на ASP.N
 ## Быстрый старт
 1. Клонируйте репозиторий:
 
-   git clone https://github.com/yourusername/BirthdayApp.git
+   git clone https://github.com/AlexIorsh/BirthdayApp.git
 
 2. Перейдите в папку проекта:
 
