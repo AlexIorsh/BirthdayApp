@@ -1,0 +1,31 @@
+@model BirthdayApp.Models.Birthday
+
+<h2>Редактировать день рождения</h2>
+
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+    <div class="form-group">
+        <label asp-for="Name">Имя</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="BirthDate">Дата рождения</label>
+        <input asp-for="BirthDate" type="date" class="form-control" />
+        <span asp-validation-for="BirthDate" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Текущее фото</label><br />
+        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        {
+            <img src="@Model.PhotoPath" alt="Фото" width="120" height="120" />
+        }
+    </div>
+    <div class="form-group">
+        <label asp-for="Hobbies">Хобби и интересы</label>
+        <input asp-for="Hobbies" class="form-control" />
+        <span asp-validation-for="Hobbies" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+<a href="@Url.Action("Index")">Назад к списку</a>

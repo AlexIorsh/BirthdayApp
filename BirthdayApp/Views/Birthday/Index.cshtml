@@ -1,0 +1,47 @@
+@model IEnumerable<BirthdayApp.Models.Birthday>
+
+<h2>Все дни рождения</h2>
+
+@if (!Model.Any())
+{
+    <p>Нет ни одной записи.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Дата рождения</th>
+                <th>Фото</th>
+                <th>Хобби и интересы</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var birthday in Model)
+            {
+                <tr>
+                    <td>@birthday.Name</td>
+                    <td>@birthday.BirthDate.ToString("d")</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(birthday.PhotoPath))
+                        {
+                            <img src="@birthday.PhotoPath" alt="Фото" style="max-width:120px; max-height:120px; object-fit:cover; border-radius:8px;" />
+                        }
+                    </td>
+                    <td>@birthday.Hobbies</td>
+                    <td>
+                        <a href="@Url.Action("Edit", new { id = birthday.Id })">Редактировать</a>
+                        <form asp-action="Delete" asp-controller="Birthday" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@birthday.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<a class="btn btn-primary" href="@Url.Action("Create")">Добавить новый день рождения</a>
+<a class="btn btn-secondary" href="@Url.Action("Index", "Home")">На главную</a>

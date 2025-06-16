@@ -1,0 +1,52 @@
+﻿@model IEnumerable<BirthdayApp.Models.Birthday>
+@{
+    ViewData["Title"] = "Главная";
+    var birthdays = Model ?? new List<BirthdayApp.Models.Birthday>();
+    int GetAge(DateTime birthDate)
+    {
+        var today = DateTime.Today;
+        int age = today.Year - birthDate.Year;
+        if (birthDate > today.AddYears(-age)) age--;
+        return age;
+    }
+}
+
+<h2>Сегодняшние и ближайшие дни рождения</h2>
+
+@if (!birthdays.Any())
+{
+    <p>Нет дней рождения в ближайшую неделю.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Дата рождения</th>
+                <th>Возраст</th>
+                <th>Фото</th>
+                <th>Хобби и интересы</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var birthday in birthdays)
+            {
+                <tr>
+                    <td>@birthday.Name</td>
+                    <td>@birthday.BirthDate.ToString("d")</td>
+                    <td>@GetAge(birthday.BirthDate)</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(birthday.PhotoPath))
+                        {
+                            <img src="@birthday.PhotoPath" alt="Фото" style="max-width:120px; max-height:120px; object-fit:cover; border-radius:8px;" />
+                        }
+                    </td>
+                    <td>@birthday.Hobbies</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<a class="btn btn-primary" href="@Url.Action("Index", "Birthday")">Все дни рождения</a>
+<a class="btn btn-success" href="@Url.Action("Create", "Birthday")">Добавить новый день рождения</a>
