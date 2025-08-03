@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using BirthdayApp.Models;
+using BirthdayApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Регистрация сервиса дней рождения
+builder.Services.AddScoped<IBirthdayService, BirthdayService>();
 
 var app = builder.Build();
 

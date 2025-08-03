@@ -1,110 +1,65 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using BirthdayApp.Models;
+using BirthdayApp.Services;
 
 namespace BirthdayApp.Controllers
 {
+    /// <summary>
+    /// Контроллер для просмотра дней рождения
+    /// </summary>
     public class BirthdayController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IBirthdayService _birthdayService;
 
-        public BirthdayController(ApplicationDbContext context)
+        /// <summary>
+        /// Конструктор контроллера
+        /// </summary>
+        /// <param name="birthdayService">Сервис для работы с днями рождения</param>
+        public BirthdayController(IBirthdayService birthdayService)
         {
-            _context = context;
+            _birthdayService = birthdayService;
         }
 
-        // Список всех дней рождения
+        /// <summary>
+        /// Отображает список всех дней рождения для просмотра
+        /// </summary>
+        /// <returns>Представление со списком дней рождения</returns>
         public async Task<IActionResult> Index()
         {
-            var allBirthdays = await _context.Birthdays.OrderBy(b => b.BirthDate).ToListAsync();
-            return View(allBirthdays);
+            var birthdaysWithStatus = await _birthdayService.GetBirthdaysWithStatusAsync();
+            return View(birthdaysWithStatus);
         }
 
-        // Страница добавления нового дня рождения
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // Обработка формы добавления
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,BirthDate,Hobbies")] Birthday birthday, IFormFile photo)
-        {
-            if (ModelState.IsValid)
-            {
-                if (photo != null && photo.Length > 0)
-                {
-                    var fileName = Path.GetFileName(photo.FileName);
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await photo.CopyToAsync(stream);
-                    }
-                    birthday.PhotoPath = "/images/" + fileName;
-                }
-                _context.Add(birthday);
-                await _context.SaveChangesAsync();
-                // После добавления — переход на главную (список ближайших ДР)
-                return RedirectToAction("Index", "Home");
-            }
-            return View(birthday);
-        }
-
-        // Страница редактирования
-        public async Task<IActionResult> Edit(int? id)
+        /// <summary>
+        /// Отображает детальную информацию о дне рождения
+        /// </summary>
+        /// <param name="id">Идентификатор дня рождения</param>
+        /// <returns>Представление с детальной информацией</returns>
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
                 return NotFound();
-            var birthday = await _context.Birthdays.FindAsync(id);
+
+            var birthday = await _birthdayService.GetBirthdayByIdAsync(id.Value);
             if (birthday == null)
                 return NotFound();
-            return View(birthday);
-        }
 
-        // Обработка формы редактирования
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,BirthDate,PhotoPath,Hobbies")] Birthday birthday)
-        {
-            if (id != birthday.Id)
-                return NotFound();
-            if (ModelState.IsValid)
+            var today = DateTime.Today;
+            var nextBirthday = _birthdayService.GetNextBirthdayDate(birthday.BirthDate, today);
+            var daysUntilBirthday = _birthdayService.CalculateDaysUntilBirthday(birthday.BirthDate, today);
+            var ageOnNextBirthday = _birthdayService.CalculateAgeOnNextBirthday(birthday.BirthDate, today);
+            var status = _birthdayService.GetBirthdayStatus(birthday.BirthDate, today);
+
+            var birthdayWithDetails = new BirthdayWithStatus
             {
-                try
-                {
-                    _context.Update(birthday);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!BirthdayExists(birthday.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
-                return RedirectToAction("Index", "Home");
-            }
-            return View(birthday);
-        }
+                Birthday = birthday,
+                Status = status,
+                DaysUntilBirthday = daysUntilBirthday,
+                AgeOnNextBirthday = ageOnNextBirthday,
+                NextBirthdayDate = nextBirthday
+            };
 
-        private bool BirthdayExists(int id)
-        {
-            return _context.Birthdays.Any(e => e.Id == id);
-        }
-
-        // Удаление дня рождения
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var birthday = await _context.Birthdays.FindAsync(id);
-            if (birthday != null)
-            {
-                _context.Birthdays.Remove(birthday);
-                await _context.SaveChangesAsync();
-            }
-            return RedirectToAction("Index", "Home");
+            return View(birthdayWithDetails);
         }
     }
 }

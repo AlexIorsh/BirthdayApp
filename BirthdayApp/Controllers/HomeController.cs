@@ -1,49 +1,60 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using BirthdayApp.Models;
+using BirthdayApp.Services;
 
 namespace BirthdayApp.Controllers;
 
+/// <summary>
+/// Контроллер главной страницы
+/// </summary>
 public class HomeController : Controller
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IBirthdayService _birthdayService;
 
-    public HomeController(ApplicationDbContext context)
+    /// <summary>
+    /// Конструктор контроллера
+    /// </summary>
+    /// <param name="birthdayService">Сервис для работы с днями рождения</param>
+    public HomeController(IBirthdayService birthdayService)
     {
-        _context = context;
+        _birthdayService = birthdayService;
     }
 
-    // Корневая страница: ближайшие дни рождения (по дню и месяцу, игнорируя год)
+    /// <summary>
+    /// Отображает главную страницу с предстоящими и сегодняшними днями рождения
+    /// </summary>
+    /// <returns>Представление главной страницы</returns>
     public async Task<IActionResult> Index()
     {
-        var today = DateTime.Today;
-        var nextWeek = today.AddDays(7);
-        var allBirthdays = await _context.Birthdays.ToListAsync();
-        var upcomingBirthdays = allBirthdays
-            .Where(b =>
-                IsBirthdayInRange(b.BirthDate, today, nextWeek)
-            )
-            .OrderBy(b => GetNextBirthdayDate(b.BirthDate, today))
-            .ToList();
-        return View(upcomingBirthdays);
+        var todayBirthdays = await _birthdayService.GetTodayBirthdaysAsync();
+        var upcomingBirthdays = await _birthdayService.GetUpcomingBirthdaysAsync();
+
+        var viewModel = new HomeViewModel
+        {
+            TodayBirthdays = todayBirthdays.ToList(),
+            UpcomingBirthdays = upcomingBirthdays.ToList()
+        };
+
+        return View(viewModel);
     }
 
-    // Проверка, попадает ли день рождения в диапазон ближайшей недели (по дню и месяцу)
-    private bool IsBirthdayInRange(DateTime birthDate, DateTime from, DateTime to)
+    /// <summary>
+    /// Отображает страницу конфиденциальности
+    /// </summary>
+    /// <returns>Представление страницы конфиденциальности</returns>
+    public IActionResult Privacy()
     {
-        var thisYearBirthday = new DateTime(from.Year, birthDate.Month, birthDate.Day);
-        if (thisYearBirthday < from)
-            thisYearBirthday = thisYearBirthday.AddYears(1);
-        return thisYearBirthday >= from && thisYearBirthday <= to;
+        return View();
     }
 
-    // Получить дату следующего дня рождения
-    private DateTime GetNextBirthdayDate(DateTime birthDate, DateTime from)
+    /// <summary>
+    /// Обрабатывает ошибки
+    /// </summary>
+    /// <returns>Представление ошибки</returns>
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
     {
-        var next = new DateTime(from.Year, birthDate.Month, birthDate.Day);
-        if (next < from)
-            next = next.AddYears(1);
-        return next;
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

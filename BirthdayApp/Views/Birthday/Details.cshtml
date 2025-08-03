@@ -1,0 +1,94 @@
+@model BirthdayApp.Models.BirthdayWithStatus
+
+@{
+    ViewData["Title"] = "Детали дня рождения";
+}
+
+<h2>Детали дня рождения</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        @if (!string.IsNullOrEmpty(Model.Birthday.PhotoPath))
+                        {
+                            <img src="@Model.Birthday.PhotoPath" alt="Фото" class="img-fluid rounded" style="max-width:100%; height:auto;" />
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted">
+                                <i class="bi bi-person" style="font-size: 4rem;"></i>
+                                <p>Фото не загружено</p>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-8">
+                        <h3>@Model.Birthday.Name</h3>
+                        <hr />
+                        
+                        <div class="row mb-2">
+                            <div class="col-sm-4"><strong>Дата рождения:</strong></div>
+                            <div class="col-sm-8">@Model.Birthday.BirthDate.ToString("dd.MM.yyyy")</div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-sm-4"><strong>Статус:</strong></div>
+                            <div class="col-sm-8">
+                                @{
+                                    var statusText = Model.Status switch
+                                    {
+                                        BirthdayStatus.Today => "🎉 Сегодня",
+                                        BirthdayStatus.Soon => "📅 Скоро",
+                                        BirthdayStatus.Later => "📆 Позже",
+                                        BirthdayStatus.Passed => "✅ Прошел",
+                                        _ => ""
+                                    };
+                                }
+                                @statusText
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-sm-4"><strong>Дней до дня рождения:</strong></div>
+                            <div class="col-sm-8">
+                                @if (Model.DaysUntilBirthday == 0)
+                                {
+                                    <span class="badge bg-success">Сегодня!</span>
+                                }
+                                else
+                                {
+                                    @Model.DaysUntilBirthday
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-sm-4"><strong>Возраст на следующий ДР:</strong></div>
+                            <div class="col-sm-8">@Model.AgeOnNextBirthday</div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-sm-4"><strong>Дата следующего ДР:</strong></div>
+                            <div class="col-sm-8">@Model.NextBirthdayDate.ToString("dd.MM.yyyy")</div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Birthday.Hobbies))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Хобби и интересы:</strong></div>
+                                <div class="col-sm-8">@Model.Birthday.Hobbies</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    <a asp-controller="BirthdayManagement" asp-action="Edit" asp-route-id="@Model.Birthday.Id" class="btn btn-primary">Редактировать</a>
+</div> 
